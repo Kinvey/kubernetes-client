@@ -114,8 +114,10 @@ class Request {
       deprecate('Request() without a .kubeconfig option, see ' +
                 'https://github.com/godaddy/kubernetes-client/blob/master/merging-with-kubernetes.md')
       convertedOptions = options
+      this._kubeconfig = {}
     } else {
       convertedOptions = convertKubeconfig(options.kubeconfig)
+      this._kubeconfig = options.kubeconfig
     }
 
     this.requestOptions.qsStringifyOptions = { indices: false }
@@ -144,29 +146,35 @@ class Request {
 
   _request (options, cb) {
     const auth = this.authProvider
-    return request(options, (err, res, body) => {
-      if (err) return cb(err)
+    // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
+    return this._kubeconfig.applyToRequest(options)
+      .then(() => {
+        delete options.auth
+        return request(options, (err, res, body) => {
+          if (err) return cb(err)
 
-      if (body && isUpgradeRequired(body)) {
-        return upgradeRequest(options, cb)
-      }
+          if (body && isUpgradeRequired(body)) {
+            return upgradeRequest(options, cb)
+          }
 
-      // Refresh auth if 401 or 403
-      if ((res.statusCode === 401 || res.statusCode === 403) && auth.type) {
-        return refreshAuth(auth.type, auth.config)
-          .then(newAuth => {
-            this.requestOptions.auth = newAuth
-            options.auth = newAuth
-            return request(options, (err, res, body) => {
-              if (err) return cb(err)
-              return cb(null, { statusCode: res.statusCode, body })
-            })
-          })
-          .catch(err => cb(err))
-      }
+          // Refresh auth if 401 or 403
+          if ((res.statusCode === 401 || res.statusCode === 403) && auth.type) {
+            return refreshAuth(auth.type, auth.config)
+              .then(newAuth => {
+                this.requestOptions.auth = newAuth
+                options.auth = newAuth
+                return request(options, (err, res, body) => {
+                  if (err) return cb(err)
+                  return cb(null, { statusCode: res.statusCode, body })
+                })
+              })
+              .catch(err => cb(err))
+          }
 
-      return cb(null, { statusCode: res.statusCode, body: body })
-    })
+          return cb(null, { statusCode: res.statusCode, body: body })
+        })
+      })
+      .catch((err) => cb(err))
   }
 
   async getLogByteStream (options) {
@@ -174,6 +182,9 @@ class Request {
   }
 
   async getWatchObjectStream (options) {
+    // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
+    await this._kubeconfig.applyToRequest(options)
+    delete options.auth
     const jsonStream = new JSONStream()
     const stream = this.http(Object.assign({ stream: true }, options))
     pump(stream, jsonStream)
@@ -222,7 +233,9 @@ class Request {
       delete requestOptions.auth
     }
 
-    if (options.stream) return request(requestOptions)
+    if (options.stream) {
+      return request(requestOptions)
+    }
 
     return new Promise((resolve, reject) => {
       this._request(requestOptions, (err, res) => {
