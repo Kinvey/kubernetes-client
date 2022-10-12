@@ -110,7 +110,6 @@ function convertKubeconfig (kubeconfig) {
 
   return {
     url: cluster.server,
-    auth: Object.keys(auth).length ? auth : null,
     ca,
     insecureSkipTlsVerify,
     namespace,

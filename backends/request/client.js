@@ -114,7 +114,9 @@ class Request {
       deprecate('Request() without a .kubeconfig option, see ' +
                 'https://github.com/godaddy/kubernetes-client/blob/master/merging-with-kubernetes.md')
       convertedOptions = options
-      this._kubeconfig = {}
+      this._kubeconfig = {
+        applyToRequest: () => Promise.resolve()
+      }
     } else {
       convertedOptions = convertKubeconfig(options.kubeconfig)
       this._kubeconfig = options.kubeconfig
@@ -149,7 +151,6 @@ class Request {
     // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
     return this._kubeconfig.applyToRequest(options)
       .then(() => {
-        delete options.auth
         return request(options, (err, res, body) => {
           if (err) return cb(err)
 
@@ -178,13 +179,14 @@ class Request {
   }
 
   async getLogByteStream (options) {
+    // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
+    await this._kubeconfig.applyToRequest(options)
     return this.http(Object.assign({ stream: true }, options))
   }
 
   async getWatchObjectStream (options) {
     // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
     await this._kubeconfig.applyToRequest(options)
-    delete options.auth
     const jsonStream = new JSONStream()
     const stream = this.http(Object.assign({ stream: true }, options))
     pump(stream, jsonStream)

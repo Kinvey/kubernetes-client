@@ -52,6 +52,8 @@ class ClientNodeBackend {
   }
 
   async getWatchObjectStream (options) {
+    // this will refresh the token if needed (https://github.com/kubernetes-client/javascript/pull/333/files)
+    await this.kubeconfig.applyToRequest(options)
     const watch = new this.client.Watch(this.kubeconfig)
 
     const stream = new Readable({
