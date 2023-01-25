@@ -33,7 +33,7 @@
     "typings"
   ],
   "dependencies": {
-    "@kubernetes/client-node": "0.10.3",
+    "@kubernetes/client-node": "0.18.1",
     "camelcase": "^6.0.0",
     "deepmerge": "^4.2.2",
     "depd": "^2.0.0",
@@ -41,11 +41,11 @@
     "json-stream": "^1.0.0",
     "openid-client": "^3.14.0",
     "pump": "^3.0.0",
-    "qs": "^6.9.0",
+    "qs": "6.11.0",
     "request": "^2.88.2",
     "swagger-fluent": "^5.0.3",
     "url-join": "^4.0.1",
-    "ws": "^7.2.3"
+    "ws": "7.5.9"
   },
   "devDependencies": {
     "@types/node": "13.13.4",
