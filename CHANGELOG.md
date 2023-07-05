@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [9.1.4](https://github.com/Kinvey/kubernetes-client/compare/9.1.3...9.1.4) (2023-07-05)
+
+
+### Bug Fixes
+
+* **deps:** update http-cache-semantics to 4.1.1 ([#2](https://github.com/Kinvey/kubernetes-client/pull/2))
+
 ## [9.0.0](https://github.com/godaddy/kubernetes-client/compare/8.3.7...9.0.0) (2020-05-01)
 
 
